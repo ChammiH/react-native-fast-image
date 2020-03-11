@@ -21,10 +21,12 @@ RCT_EXPORT_MODULE(FastImageView)
     if (configNotSet) {
         float deviceMemory = [NSProcessInfo processInfo].physicalMemory;
         float deviceMemoryInGigs = deviceMemory / (1024.0 * 1024.0 * 1024.0);
+        
+        float halfOfDeviceMemory = deviceMemory * 0.5;
         float thirdOfDeviceMemory = deviceMemory * 0.33;
         
         SDImageCache.sharedImageCache.config.maxDiskAge = twoDaysOfSeconds;
-        SDImageCache.sharedImageCache.config.maxMemoryCost = thirdOfDeviceMemory;
+        SDImageCache.sharedImageCache.config.maxMemoryCost = halfOfDeviceMemory;
         SDImageCache.sharedImageCache.config.diskCacheReadingOptions = NSDataReadingMappedIfSafe;
         
         SDWebImageManager.sharedManager.optionsProcessor = [SDWebImageOptionsProcessor optionsProcessorWithBlock:^SDWebImageOptionsResult * _Nullable(NSURL * _Nullable url, SDWebImageOptions options, SDWebImageContext * _Nullable context) {
@@ -37,6 +39,7 @@ RCT_EXPORT_MODULE(FastImageView)
             SDImageCache.sharedImageCache.config.maxMemoryCount = 25;
             SDImageCache.sharedImageCache.config.shouldCacheImagesInMemory = NO;
             SDImageCache.sharedImageCache.config.shouldUseWeakMemoryCache = NO;
+            SDImageCache.sharedImageCache.config.maxMemoryCost = thirdOfDeviceMemory;
         }
     }
 }
