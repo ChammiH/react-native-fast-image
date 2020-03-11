@@ -179,6 +179,8 @@
         }
         self.hasCompleted = NO;
         self.hasErrored = NO;
+
+        options |= SDWebImageScaleDownLargeImages;
         
         [self downloadImage:_source options:options];
     }

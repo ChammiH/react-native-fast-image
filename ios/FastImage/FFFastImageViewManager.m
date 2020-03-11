@@ -8,7 +8,37 @@
 RCT_EXPORT_MODULE(FastImageView)
 
 - (FFFastImageView*)view {
-  return [[FFFastImageView alloc] init];
+    [self setCacheConfigs];
+    return [[FFFastImageView alloc] init];
+}
+
+// Using a work around here to make sure the config only runs once
+// Move this to a constructor somewhere where it wil only run once
+- (void)setCacheConfigs {
+    float twoDaysOfSeconds = 3600 * 24 * 2;
+    bool configNotSet = (SDImageCache.sharedImageCache.config.maxDiskAge != twoDaysOfSeconds);
+    
+    if (configNotSet) {
+        float deviceMemory = [NSProcessInfo processInfo].physicalMemory;
+        float deviceMemoryInGigs = deviceMemory / (1024.0 * 1024.0 * 1024.0);
+        float thirdOfDeviceMemory = deviceMemory * 0.33;
+        
+        SDImageCache.sharedImageCache.config.maxDiskAge = twoDaysOfSeconds;
+        SDImageCache.sharedImageCache.config.maxMemoryCost = thirdOfDeviceMemory;
+        SDImageCache.sharedImageCache.config.diskCacheReadingOptions = NSDataReadingMappedIfSafe;
+        
+        SDWebImageManager.sharedManager.optionsProcessor = [SDWebImageOptionsProcessor optionsProcessorWithBlock:^SDWebImageOptionsResult * _Nullable(NSURL * _Nullable url, SDWebImageOptions options, SDWebImageContext * _Nullable context) {
+             // Disable Force Decoding in global, may reduce the frame rate
+             options |= SDWebImageAvoidDecodeImage;
+             return [[SDWebImageOptionsResult alloc] initWithOptions:options context:context];
+        }];
+        
+        if (deviceMemoryInGigs <= 1) {
+            SDImageCache.sharedImageCache.config.maxMemoryCount = 25;
+            SDImageCache.sharedImageCache.config.shouldCacheImagesInMemory = NO;
+            SDImageCache.sharedImageCache.config.shouldUseWeakMemoryCache = NO;
+        }
+    }
 }
 
 RCT_EXPORT_VIEW_PROPERTY(source, FFFastImageSource)
